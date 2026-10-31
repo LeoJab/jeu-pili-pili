@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pili Pili</title>
+<link rel="stylesheet" href="style.css">
+<script src="/_sdk.js"></script>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="vignette"></div>
+
+<div id="app">
+  <!-- MENU -->
+  <section id="menu" class="screen">
+    <div class="center-col">
+      <div class="logo"><span>PILI</span> <span>PILI</span> <span class="l-chili">🌶️</span></div>
+      <p class="tag">Parie sur tes plis… et évite de te brûler !</p>
+      <div class="panel menu-box">
+        <div id="whoami" class="whoami"></div>
+        <label id="pseudoRow" class="hidden">Ton pseudo
+          <input id="pseudo" name="pseudo" maxlength="16" placeholder="Pseudo" autocomplete="off">
+        </label>
+        <button id="btnCreate" class="btn big fire">🔥 Créer une salle</button>
+        <div id="joinRow" class="join-row">
+          <input id="code" name="code" maxlength="12" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+          <button id="btnJoin" class="btn">Rejoindre</button>
+        </div>
+        <button id="btnResume" class="btn alt hidden"></button>
+        <button id="btnRules" class="btn ghost dark">📖 Les règles</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SALON -->
+  <section id="lobby" class="screen hidden">
+    <div class="center-col">
+      <div class="panel lobby-box">
+        <h2>Salle <span id="roomCode" class="roomcode"></span> <button id="btnCopy" class="mini-btn" title="Copier le code">📋</button></h2>
+        <p class="hint">Donne le code à tes potes, ou utilise « 📣 Annoncer ma partie » dans la barre du hub. De 2 à 8 joueurs.</p>
+        <ul id="lobbyPlayers" class="lobby-players"></ul>
+        <div id="hostCtl" class="hidden">
+          <div class="seg" id="modeSeg">
+            <button data-m="none">Classique</button>
+            <button data-m="std">Missions</button>
+            <button data-m="all">Missions + Experts</button>
+          </div>
+          <div class="row">
+            <button id="btnBot" class="btn alt">🤖 + Bot</button>
+            <button id="btnStart" class="btn big fire">🌶️ Lancer</button>
+          </div>
+        </div>
+        <p id="lobbyWait" class="hint"></p>
+        <button id="btnLeave" class="btn ghost dark">⬅ Quitter la salle</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTIE -->
+  <section id="game" class="screen hidden">
+    <header class="topbar">
+      <div id="roundInfo" class="chip"></div>
+      <button id="missionChip" class="chip mission-chip"></button>
+      <button id="btnSound" class="chip icon" title="Son">🔊</button>
+      <button id="btnHelp" class="chip icon" title="Règles">?</button>
+      <button id="btnQuit" class="chip icon" title="Quitter">⏏</button>
+    </header>
+    <div id="seats" class="seats"></div>
+    <main class="table">
+      <div id="missionDesc" class="mdesc"></div>
+      <div id="trick" class="trick"></div>
+      <div id="status" class="status"></div>
+    </main>
+    <footer class="me-panel">
+      <div id="betBox" class="betbox"></div>
+      <div id="hand" class="hand"></div>
+      <div id="emoBar" class="emobar"></div>
+    </footer>
+  </section>
+</div>
+
+<div id="overlay"></div>
+<div id="sheet" class="sheet hidden"></div>
+<div id="modal" class="sheet hidden"></div>
+<div id="toast"></div>
+
+<script src="rules.js"></script>
+<script src="fx.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
