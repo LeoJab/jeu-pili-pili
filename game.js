@@ -273,7 +273,7 @@
     const chip = $('#missionChip');
     chip.textContent = m ? m.emoji + ' ' + m.nom + (m.expert ? ' ⭐' : '') : '🌶️ Manche classique';
     chip.classList.toggle('expert', !!(m && m.expert));
-    $('#missionCard').innerHTML = `<div class="mc-emoji">${m ? m.emoji : '🌶️'}</div><div class="mc-name">${m ? esc(m.nom) : 'Classique'}${m && m.expert ? ' ⭐' : ''}</div><div class="mc-desc">${m ? esc(m.desc) : 'Parie le bon nombre de plis !'}</div>${S.cursed ? '<div class="mc-desc">☠️ Maudits : <b>' + S.cursed.join(' et ') + '</b></div>' : ''}`;
+    $('#missionCard').innerHTML = `<div class="mc-emoji">${m ? m.emoji : '🌶️'}</div><div class="mc-txt"><div class="mc-name">${m ? esc(m.nom) : 'Classique'}${m && m.expert ? ' ⭐' : ''}</div><div class="mc-desc">${m ? esc(m.desc) : 'Parie le bon nombre de plis !'}${S.cursed ? ' ☠️ Maudits : <b>' + S.cursed.join(' et ') + '</b>' : ''}</div></div>`;
     $('#missionCard').classList.toggle('expert', !!(m && m.expert));
     $('.table').classList.toggle('rev', S.mission === 'reverse');
     $('#btnSound').textContent = Sfx.muted ? '🔇' : '🔊';
@@ -362,7 +362,7 @@
     }
     box.innerHTML = html;
     const emo = $('#emoBar');
-    if (!emo.firstChild) emo.innerHTML = ['🔥', '😂', '😱', '👏', '🌶️', '💀'].map(e => `<button data-e="${e}">${e}</button>`).join('');
+    if (!emo.firstChild) emo.innerHTML = ['🔥', '😂', '😱', '👏', '🌶️', '💀', '🥶'].map(e => `<button data-e="${e}">${e}</button>`).join('');
   }
 
   /* ---- Fenêtres de fin de manche / de partie ---- */
@@ -495,7 +495,7 @@
   function emoFx(id, e) {
     if (typeof e !== 'string' || e.length > 4) return;
     const p = seatPos(id);
-    Fx.floatText(p.x, p.y + 10, e, 'big'); Fx.burst(p.x, p.y, e === '🌶️' ? 'chili' : 'spark', 6);
+    Fx.floatText(p.x, p.y + 10, e); Fx.emojiRain(e, 14);
   }
 
   /* ================= Interactions ================= */

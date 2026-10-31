@@ -75,6 +75,13 @@ const Fx = (() => {
       else add(mk({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, g: 0.12, drag: 0.95, life: rand(25, 55), size: rand(1.5, 4), color: pick(['#ffd426', '#ff8a1f', '#fff']), shrink: true }));
     }
   }
+  // Petite pluie d'emojis (limitée pour éviter les ralentissements)
+  function emojiRain(emoji, n = 14) {
+    if (reduce) n = Math.ceil(n / 3);
+    const room = 70 - P.filter(p => p.kind === 'emoji').length;
+    n = Math.min(n, room);
+    for (let i = 0; i < n; i++) add(mk({ kind: 'emoji', emoji, x: rand(10, W - 10), y: -rand(20, 380), vx: rand(-0.4, 0.4), vy: rand(2.2, 4), g: 0.02, life: 300, size: rand(22, 34), rot: rand(-0.4, 0.4), vr: rand(-0.04, 0.04) }));
+  }
   function rain(n = 120, ms = 2200) {
     const t0 = performance.now();
     const id = setInterval(() => {
@@ -127,7 +134,7 @@ const Fx = (() => {
     elm.classList.remove(cls); void elm.offsetWidth; elm.classList.add(cls);
   }
 
-  return { init, burst, rain, fireworks, banner, floatText, shake, flash, pop, get W() { return W; }, get H() { return H; } };
+  return { init, burst, rain, emojiRain, fireworks, banner, floatText, shake, flash, pop, get W() { return W; }, get H() { return H; } };
 })();
 
 /* ---- Sons synthétisés (WebAudio, aucun fichier) ---- */

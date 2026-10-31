@@ -223,11 +223,16 @@ input[type=range] { padding: 0; accent-color: var(--orange); }
 @media (max-height: 620px) { .hand { padding-top: 6px; } .mdesc { display: none; } .logo { font-size: 44px; } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01s !important; animation-iteration-count: 1 !important; } }
 
-/* Carte mission active (à droite de la table) */
-.table { padding-right: clamp(104px, 30%, 170px); }
-.mcard { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: clamp(92px, 27%, 156px); background: linear-gradient(160deg, #fff, #ffe9a0); border: 3px solid var(--encre); border-radius: 14px; box-shadow: 3px 3px 0 var(--encre); padding: 8px 6px; text-align: center; color: var(--encre); max-height: 94%; overflow-y: auto; }
+/* Carte mission active : à droite sur grand écran (marges symétriques pour garder la table centrée),
+   en bandeau compact en haut de la table sur téléphone */
+.mcard { background: linear-gradient(160deg, #fff, #ffe9a0); border: 3px solid var(--encre); border-radius: 14px; box-shadow: 3px 3px 0 var(--encre); padding: 6px 10px; text-align: center; color: var(--encre); width: 100%; display: flex; align-items: center; gap: 8px; text-align: left; }
 .mcard.expert { background: linear-gradient(160deg, #fff, #ffb36b); }
-.mc-emoji { font-size: 28px; line-height: 1; }
-.mc-name { font-size: 13px; margin: 3px 0; }
-.mc-desc { font-size: 11px; font-weight: 700; opacity: .85; line-height: 1.25; margin-top: 3px; }
-@media (min-width: 760px) { .mc-emoji { font-size: 40px; } .mc-name { font-size: 16px; } .mc-desc { font-size: 13px; } }
+.mc-emoji { font-size: 26px; line-height: 1; flex: none; }
+.mc-name { font-size: 13px; }
+.mc-desc { font-size: 11px; font-weight: 700; opacity: .85; line-height: 1.25; }
+.mc-txt { min-width: 0; }
+@media (min-width: 600px) {
+  .table { padding-left: 190px; padding-right: 190px; }
+  .mcard { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 170px; flex-direction: column; text-align: center; padding: 10px 8px; max-height: 94%; overflow-y: auto; }
+  .mc-emoji { font-size: 40px; } .mc-name { font-size: 16px; margin: 3px 0; } .mc-desc { font-size: 13px; margin-top: 3px; }
+}
