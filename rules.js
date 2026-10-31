@@ -71,7 +71,7 @@ const PP = (() => {
     startRound(S);
   }
   function toLobby(S) {
-    ['hands', 'bets', 'won', 'extra', 'bonus', 'cursed', 'trick', 'recap', 'winners', 'game', 'tw'].forEach(k => delete S[k]);
+    ['hands', 'bets', 'won', 'extra', 'bonus', 'cursed', 'trick', 'recap', 'winners', 'game', 'tw', 'ready'].forEach(k => delete S[k]);
     S.phase = 'lobby'; S.picked = []; S._picks = {}; S.mission = null; S.log = [];
     S.players.forEach(p => { delete p.pili; });
     S.fx = fx(S, 'lobby', {});
@@ -102,10 +102,21 @@ const PP = (() => {
       S.players.forEach((p, i) => { S.hands[S.players[(i + 1) % n].id] = old[p.id]; });
     }
     S.trick = []; S.trickNo = 0; S.tw = null; S.recap = null;
-    S.phase = S.mission === 'swap1' ? 'swap' : 'bet';
+    S.phase = 'ready'; S.ready = [];
     S.turn = S.lead = S.dealer;
     S.fx = fx(S, 'mission', { m: S.mission, dealer: S.dealer });
     log(S, 'Manche ' + S.round + ' — ' + (m ? m.nom : 'manche classique'));
+  }
+
+  /* ---------- Prêt ? (début de manche) ---------- */
+  function ready(S, pid) {
+    if (S.phase !== 'ready' || S.ready.includes(pid) || !S.players.some(p => p.id === pid)) return false;
+    S.ready.push(pid);
+    if (S.ready.length === S.players.length) {
+      S.phase = S.mission === 'swap1' ? 'swap' : 'bet'; S.ready = [];
+      S.fx = fx(S, 'go', {});
+    }
+    return true;
   }
 
   /* ---------- Paris ---------- */
@@ -267,6 +278,6 @@ const PP = (() => {
     return src[rnd(src.length)];
   }
 
-  return { MAX_PILI, JOKER, MISSIONS, byId, lobby, addBot, startGame, startRound, toLobby, validBets, bet, legalCards, play, pick, advanceTrick, nextRound, botBet, botCard, botSwap, strength, rnd };
+  return { MAX_PILI, JOKER, MISSIONS, byId, lobby, addBot, startGame, startRound, ready, toLobby, validBets, bet, legalCards, play, pick, advanceTrick, nextRound, botBet, botCard, botSwap, strength, rnd };
 })();
 if (typeof module !== 'undefined') module.exports = PP;

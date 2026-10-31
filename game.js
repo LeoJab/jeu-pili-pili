@@ -156,6 +156,7 @@
       case 'start':
         if (mine && S.phase === 'lobby' && S.players.length >= 2) { PP.startGame(S, room + '-' + Date.now().toString(36)); ok = true; }
         break;
+      case 'ready': ok = PP.ready(S, pid); break;
       case 'bet': ok = PP.bet(S, pid, a.n); break;
       case 'play': ok = PP.play(S, pid, a.c, a.v); break;
       case 'pick': ok = PP.pick(S, pid, a.c, a.v); break;
@@ -173,6 +174,11 @@
     const go = (ms, fn) => { driveT = setTimeout(() => { if (S && S.v === v && isHost) fn(); }, T(ms)); };
     const auto = p => p.bot || !present.has(p.id);
     const delay = p => p.bot ? 800 + Math.random() * 700 : 4500;
+    if (S.phase === 'ready') {
+      const p = S.players.find(q => auto(q) && !S.ready.includes(q.id));
+      if (p) go(p.bot ? 700 : 4000, () => { if (PP.ready(S, p.id)) commit(); });
+      return;
+    }
     if (S.phase === 'trickEnd') return go(2000, () => { if (PP.advanceTrick(S)) commit(); });
     if (S.phase === 'bet') {
       const p = S.players[S.turn];
@@ -267,10 +273,11 @@
     const chip = $('#missionChip');
     chip.textContent = m ? m.emoji + ' ' + m.nom + (m.expert ? ' ⭐' : '') : '🌶️ Manche classique';
     chip.classList.toggle('expert', !!(m && m.expert));
-    $('#missionDesc').textContent = m ? m.desc + (S.cursed ? ' Maudits : ' + S.cursed.join(' et ') + '.' : '') : 'Parie le bon nombre de plis !';
+    $('#missionCard').innerHTML = `<div class="mc-emoji">${m ? m.emoji : '🌶️'}</div><div class="mc-name">${m ? esc(m.nom) : 'Classique'}${m && m.expert ? ' ⭐' : ''}</div><div class="mc-desc">${m ? esc(m.desc) : 'Parie le bon nombre de plis !'}</div>${S.cursed ? '<div class="mc-desc">☠️ Maudits : <b>' + S.cursed.join(' et ') + '</b></div>' : ''}`;
+    $('#missionCard').classList.toggle('expert', !!(m && m.expert));
     $('.table').classList.toggle('rev', S.mission === 'reverse');
     $('#btnSound').textContent = Sfx.muted ? '🔇' : '🔊';
-    renderSeats(); renderTrick(); renderStatus(); renderHand(); renderBottom(); renderSheet();
+    renderSeats(); renderTrick(); renderStatus(); renderHand(); renderBottom(); renderSheet(); renderReady();
     const mine = S.players[mySeat()];
     document.body.classList.toggle('danger', !!mine && mine.pili >= PP.MAX_PILI - 2 && S.phase !== 'end');
   }
@@ -285,7 +292,7 @@
       const mini = p.id === me.id ? '' : hand.map(c => showFaces(p.id) ? `<i class="mc f ${c === 0 ? 'j' : ''}" style="--h:${heat(c)}">${c === 0 ? '★' : c}</i>` : '<i class="mc"></i>').join('');
       const away = !p.bot && !present.has(p.id);
       return `<div class="seat ${p.id === me.id ? 'me' : ''} ${i === active ? 'turn' : ''} ${away ? 'away' : ''} ${S.phase === 'trickEnd' && S.tw === p.id ? 'win' : ''}" data-p="${esc(p.id)}">
-        ${S.picked && S.picked.includes(p.id) ? '<div class="ready">✓</div>' : ''}
+        ${(S.picked && S.picked.includes(p.id)) || (S.phase === 'ready' && S.ready.includes(p.id)) ? '<div class="ready">✓</div>' : ''}
         <div class="s-top">${avatarHTML(p)}<div class="s-name">${esc(p.name)}${i === S.dealer ? '<i class="dealer">D</i>' : ''}</div></div>
         <div class="s-stats">${away ? '💤 absent' : stats}</div><div class="pili">${slots}</div>${mini ? `<div class="mini">${mini}</div>` : ''}</div>`;
     }).join('');
@@ -306,6 +313,7 @@
     const cur = S.players[S.turn];
     const waiting = () => S.players.filter(p => !S.picked.includes(p.id)).map(p => esc(p.name)).join(', ');
     switch (S.phase) {
+      case 'ready': txt = 'Clique sur « Prêt » pour lancer la manche !'; break;
       case 'swap': txt = seat >= 0 && !S.picked.includes(me.id) ? 'Choisis 1 carte à passer à ton voisin de gauche ➡️' : 'En attente de : ' + waiting(); mineTurn = seat >= 0 && !S.picked.includes(me.id); break;
       case 'bet': mineTurn = S.turn === seat; txt = mineTurn ? 'À toi de parier !' : esc(cur.name) + ' réfléchit à son pari…'; break;
       case 'play':
@@ -398,6 +406,7 @@
     const mine = f.p === me.id || f.w === me.id;
     switch (f.k) {
       case 'mission': return missionReveal(f);
+      case 'go': Sfx.play('win'); Fx.banner('🌶️ C’est parti !', '', 1100); break;
       case 'bet': {
         Sfx.play('bet');
         const p = seatPos(f.p); Fx.floatText(p.x, p.y + 30, '🎯 ' + f.n, 'gold');
@@ -453,19 +462,34 @@
   }
 
   function missionReveal(f) {
-    const m = f.m ? PP.byId[f.m] : null;
     Sfx.play('deal'); setTimeout(() => Sfx.play('mission'), T(250));
-    const box = document.createElement('div');
-    box.className = 'mission-reveal';
-    box.innerHTML = `<div class="mr-card ${m && m.expert ? 'expert' : ''}"><div class="mr-emoji">${m ? m.emoji : '🌶️'}</div>
-      ${m && m.expert ? '<span class="mr-tag">⭐ EXPERT</span>' : '<span class="mr-tag">MANCHE ' + S.round + '</span>'}
-      <h3>${m ? esc(m.nom) : 'Manche classique'}</h3><p>${m ? esc(m.desc) : 'Parie le bon nombre de plis, sans autre règle spéciale.'}</p>
-      <p class="hint">Donneur : ${esc(nameOf(S.players[f.dealer] ? S.players[f.dealer].id : ''))}</p></div>`;
-    const close = () => { box.classList.add('out'); setTimeout(() => box.remove(), 400); };
-    box.addEventListener('click', close);
-    $('#overlay').appendChild(box);
-    setTimeout(close, T(m ? 3600 : 1800));
-    if (m && m.id === 'handswap') setTimeout(() => Sfx.play('swap'), T(900));
+    if (f.m === 'handswap') setTimeout(() => Sfx.play('swap'), T(900));
+  }
+
+  // Écran « Prêt ? » : reste affiché jusqu'à ce que tout le monde soit prêt
+  function renderReady() {
+    const ov = $('#overlay');
+    let box = $('.mission-reveal', ov);
+    if (S.phase !== 'ready') { if (box) { box.classList.add('out'); setTimeout(() => box.remove(), 400); } return; }
+    const key = S.game + '-' + S.round;
+    if (box && box.dataset.key !== key) { box.remove(); box = null; }
+    if (!box) {
+      const m = S.mission ? PP.byId[S.mission] : null;
+      box = document.createElement('div');
+      box.className = 'mission-reveal'; box.dataset.key = key;
+      box.innerHTML = `<div class="mr-wrap"><div class="mr-card ${m && m.expert ? 'expert' : ''}"><div class="mr-emoji">${m ? m.emoji : '🌶️'}</div>
+        ${m && m.expert ? '<span class="mr-tag">⭐ EXPERT</span>' : '<span class="mr-tag">MANCHE ' + S.round + '</span>'}
+        <h3>${m ? esc(m.nom) : 'Manche classique'}</h3><p>${m ? esc(m.desc) : 'Parie le bon nombre de plis, sans autre règle spéciale.'}</p>
+        ${S.cursed ? '<p>☠️ Numéros maudits : <b>' + S.cursed.join(' et ') + '</b></p>' : ''}
+        <p class="hint">Donneur : ${esc(nameOf(S.players[S.dealer].id))}</p></div>
+        <div class="mr-ready"></div><button class="btn big fire" id="btnReady">✅ Je suis prêt !</button></div>`;
+      ov.appendChild(box);
+    }
+    const mine = mySeat() >= 0 && !S.ready.includes(me.id);
+    const btn = $('#btnReady', box);
+    btn.style.display = mine ? '' : 'none';
+    $('.mr-ready', box).innerHTML = S.players.map(p => `<span class="rd ${S.ready.includes(p.id) ? 'ok' : ''}">${S.ready.includes(p.id) ? '✓' : '…'} ${esc(p.name)}</span>`).join('') +
+      (mine ? '' : '<div class="hint" style="color:#fff">' + (mySeat() < 0 ? 'Tu regardes la partie' : 'En attente des autres joueurs…') + '</div>');
   }
 
   function emoFx(id, e) {
@@ -565,6 +589,7 @@
         setTimeout(() => { if (S) { renderHand(); renderBottom(); } }, 3050);
       }
     });
+    $('#overlay').addEventListener('click', e => { if (e.target.closest('#btnReady')) { e.target.closest('#btnReady').style.display = 'none'; act({ k: 'ready' }); } });
     $('#sheet').addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
       if (t.id === 'btnNext') { t.disabled = true; act({ k: 'next' }); }
